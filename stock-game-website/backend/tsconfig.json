@@ -1,48 +1,45 @@
 {
-  // Visit https://aka.ms/tsconfig to read more about this file
   "compilerOptions": {
-    // File Layout
-    // "rootDir": "./src",
-    // "outDir": "./dist",
+    // ────────────────────────────────────────────────
+    // 기본 경로 + Prisma alias (가장 중요한 부분)
+  "baseUrl": "./src",
+  "paths": {
+    "@prisma/client": ["generated/prisma-client"],   // ← 이거랑 완벽히 일치
+    "@/*": ["*"]
+  },
 
-    // Environment Settings
-    // See also https://aka.ms/tsconfig/module
+    // ────────────────────────────────────────────────
+    // Module & Environment (ESM 프로젝트용)
     "module": "nodenext",
     "moduleResolution": "NodeNext",
     "target": "ES2022",
-    "types": [],
-    // For nodejs:
-    // "lib": ["esnext"],
-    // "types": ["node"],
-    // and npm install -D @types/node
+
+    // Project Structure
     "rootDir": "./src",
     "outDir": "./dist",
-    // Other Outputs
+
+    // Output & Debugging
     "sourceMap": true,
     "declaration": true,
     "declarationMap": true,
 
-    // Stricter Typechecking Options
+    // Type Safety (좋은 선택들 유지)
+    "strict": true,
     "noUncheckedIndexedAccess": true,
     "exactOptionalPropertyTypes": true,
+    "noUncheckedSideEffectImports": true,
 
-    // Style Options
-    // "noImplicitReturns": true,
-    // "noImplicitOverride": true,
-    // "noUnusedLocals": true,
-    // "noUnusedParameters": true,
-    // "noFallthroughCasesInSwitch": true,
-    // "noPropertyAccessFromIndexSignature": true,
-
-    // Recommended Options
-    "strict": true,
+    // Interop & Modern JS
     "esModuleInterop": true,
-    "jsx": "react-jsx",
     "verbatimModuleSyntax": true,
     "isolatedModules": true,
-    "noUncheckedSideEffectImports": true,
-    "moduleDetection": "force",
     "skipLibCheck": true,
-    "forceConsistentCasingInFileNames": true
-  }
+    "forceConsistentCasingInFileNames": true,
+
+    // React (필요하면 유지, 아니면 제거)
+    "jsx": "react-jsx"
+  },
+
+  // dist 폴더는 컴파일 결과물이니 제외
+  "exclude": ["node_modules", "dist", "**/*.spec.ts", "**/*.test.ts", "prisma.config.ts"]
 }
