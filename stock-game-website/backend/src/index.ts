@@ -2,9 +2,9 @@ import express from 'express';
 import type { Request, Response as ExResponse } from 'express';
 import cors from 'cors';
 import bcrypt from 'bcrypt'; // 비밀번호 암호화용
-import { PrismaClient } from '@prisma/client'; // Prisma 연동
+import { PrismaClient } from  '@prisma/client' // Prisma 연동
 
-
+export const db = new PrismaClient();
 const app = express();
 const prisma = new PrismaClient(); // Prisma 인스턴스 생성
 const PORT = 3000;
