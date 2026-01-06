@@ -1,6 +1,8 @@
 "use client";
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import Link from 'next/link';
+
 
 // --- 타입 정의 ---
 
@@ -103,19 +105,27 @@ interface SidebarProps {
 }
 
 const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
+    const menuLinks = [
+        { name: 'LOGIN', href: '/login' },
+        { name: 'MY PAGE', href: '/mypage' },
+        { name: 'SETTINGS', href: '/settings' },
+        { name: 'FAVORITES', href: '/favorites' },
+        { name: 'HISTORY', href: '/history' },
+    ];
+
     return (
         <>
-            {/* 오버레이 */}
+            {/* 1. 배경 오버레이 (클릭 시 닫힘) */}
             <div
-                className={`fixed inset-0 bg-black/80 backdrop-blur-sm z-40 transition-opacity ${
+                className={`fixed inset-0 bg-black/80 backdrop-blur-sm z-40 transition-opacity duration-300 ${
                     isOpen ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'
-                } md:hidden`}
+                }`}
                 onClick={onClose}
             />
 
-            {/* 사이드바 패널 - 디자인 변경: 검은색 배경, 사이언 보더 */}
+            {/* 2. 사이드바 본체 */}
             <div
-                className={`fixed top-0 right-0 h-full w-72 bg-black border-l border-cyan-500/50 shadow-[-10px_0_20px_rgba(6,182,212,0.2)] z-50 transform transition-transform duration-300 ${
+                className={`fixed top-0 right-0 h-full w-72 bg-black border-l border-cyan-500/50 shadow-[-10px_0_20px_rgba(6,182,212,0.2)] z-50 transform transition-transform duration-300 ease-in-out ${
                     isOpen ? 'translate-x-0' : 'translate-x-full'
                 }`}
             >
@@ -132,10 +142,15 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
                     </div>
                     
                     <nav className="space-y-4">
-                        {['LOGIN', 'MY PAGE', 'SETTINGS', 'FAVORITES', 'HISTORY'].map((item) => (
-                            <a href="#" key={item} className="block px-4 py-3 text-gray-300 hover:text-cyan-400 hover:bg-cyan-950/30 border-l-4 border-transparent hover:border-cyan-400 transition-all duration-200 uppercase tracking-wider text-sm">
-                                {item}
-                            </a>
+                        {menuLinks.map((link) => (
+                            <Link 
+                                href={link.href} 
+                                key={link.name} 
+                                onClick={onClose}
+                                className="block px-4 py-3 text-gray-300 hover:text-cyan-400 hover:bg-cyan-950/30 border-l-4 border-transparent hover:border-cyan-400 transition-all duration-200 uppercase tracking-wider text-sm"
+                            >
+                                {link.name}
+                            </Link>
                         ))}
                     </nav>
                 </div>
