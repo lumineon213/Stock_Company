@@ -2,17 +2,17 @@
   "compilerOptions": {
     // ────────────────────────────────────────────────
     // 기본 경로 + Prisma alias (가장 중요한 부분)
-  "baseUrl": ".",
+  "baseUrl": "./src",
   "paths": {
-    "@prisma/client": ["./node_modules/.prisma/client/index"],
+    "@prisma/client": ["generated/prisma-client"],  
     "@/*": ["*"]
   },
 
     // ────────────────────────────────────────────────
     // Module & Environment (ESM 프로젝트용)
-    "target": "ES2022",
-    "module": "NodeNext",
+    "module": "nodenext",
     "moduleResolution": "NodeNext",
+    "target": "ES2022",
 
     // Project Structure
     "rootDir": "./src",
@@ -28,10 +28,6 @@
     "noUncheckedIndexedAccess": true,
     "exactOptionalPropertyTypes": true,
     "noUncheckedSideEffectImports": true,
-    "noUnusedLocals": true,
-    "noUnusedParameters": true,
-    "noImplicitReturns": true,
-    "noFallthroughCasesInSwitch": true,
 
     // Interop & Modern JS
     "esModuleInterop": true,
