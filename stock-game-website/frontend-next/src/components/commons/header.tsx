@@ -8,26 +8,19 @@ import { useAuth } from '@/context/AuthContext';
 
 interface MenuItem {
     name: string;
-    items: string[]; // 드롭다운 메뉴 항목
+    items: { name: string; href: string }[]; // 드롭다운 메뉴 항목
 }
 
 // 드롭다운 메뉴 데이터 (게임 컨셉에 맞게 항목명 대문자로 변경)
-const dropdownMenus: MenuItem[] = [
+const dropdownMenus = [
     { 
         name: 'GAME', 
-        items: ['MY PORTFOLIO', 'GAME AREA', 'LEADERBOARD', 'REPLAY'] 
-    },
-    { 
-        name: 'INTEL', 
-        items: ['LIVE NEWS', 'MARKET BRIEF', 'CORP REPORTS', 'DISCLOSURES'] 
-    },
-    { 
-        name: 'MISSION', 
-        items: ['DAILY OPS', 'WEEKLY CHALLENGE', 'ACHIEVEMENTS', 'REWARDS'] 
-    },
-    { 
-        name: 'RANK', 
-        items: ['TOP EARNERS', 'VOLUME LEADERS', 'FRIEND RANK', 'GUILD RANK'] 
+        items: [
+            { name: 'MY PORTFOLIO', href: '#' },
+            { name: 'GAME AREA', href: '/gamearea' }, // 파일명이 gamearea.tsx라면 경로는 /gamearea
+            { name: 'LEADERBOARD', href: '#' },
+            { name: 'REPLAY', href: '#' }
+        ] 
     },
 ];
 
@@ -81,12 +74,12 @@ const Dropdown: React.FC<{ menu: MenuItem }> = ({ menu }) => {
                                 {menu.items.map((item, index) => (
                                     <a
                                         key={index}
-                                        href="#"
+                                        href={item.href}
                                         // 항목 스타일 변경: font-mono, 어두운 배경 호버 효과
                                         className="block px-4 py-3 text-xs font-mono text-gray-300 hover:text-cyan-400 hover:bg-cyan-950/50 transition duration-200 border-l-2 border-transparent hover:border-cyan-400"
                                         onClick={() => setIsOpen(false)}
                                     >
-                                        [ {item} ]
+                                        [ {item.name} ]
                                     </a>
                                 ))}
                             </div>
