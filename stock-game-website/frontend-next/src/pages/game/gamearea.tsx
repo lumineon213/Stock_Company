@@ -1,12 +1,12 @@
 "use client";
 
-import React, { useEffect, useRef, useState } from 'react';
-import { createChart, ColorType, UTCTimestamp, IChartApi, ISeriesApi, CandlestickData, TickMarkType } from 'lightweight-charts';
+import React, { useEffect, useRef } from 'react';
+import { createChart, ColorType, UTCTimestamp, IChartApi, ISeriesApi, CandlestickSeries } from 'lightweight-charts';
 
 export default function GameArea() {
     const chartContainerRef = useRef<HTMLDivElement>(null);
     const chartRef = useRef<IChartApi | null>(null); // 차트 객체 저장용
-    const candlestickSeriesRef = useRef<ISeriesApi<"Candlestick"> | null>(null);
+    const candlestickSeriesRef = useRef<ISeriesApi<typeof CandlestickSeries> | null>(null);
 
     useEffect(() => {
         if (!chartContainerRef.current) return;
@@ -26,14 +26,14 @@ export default function GameArea() {
         });
 
         // 2. 시리즈 추가
-        const candlestickSeries = chart.addSeries('Candlestick' as any, {
+        const candlestickSeries = chart.addSeries(CandlestickSeries, {
             upColor: '#ef4444', 
             downColor: '#3b82f6',
             borderUpColor: '#ef4444',
             borderDownColor: '#3b82f6',
             wickUpColor: '#ef4444',
             wickDownColor: '#3b82f6',
-        }) as ISeriesApi<'Candlestick'>;
+        });
 
         // 3. 테스트 데이터 설정 (에러 지점 해결)
         const sampleData = [
