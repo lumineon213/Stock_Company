@@ -95,13 +95,54 @@ def get_all_kospi_stocks():
 
 @app.route('/api/stocks/popular', methods=['GET'])
 def get_popular_stocks():
-    """인기 종목 데이터"""
-    popular_symbols = ['005930', '000660', '035420', '051910', '068270']  # 삼성전자, SK하이닉스, NAVER, LG화학, 셀트리온
+    """인기 종목 데이터 (KOSPI + US)"""
+    # KOSPI 인기 종목 (15개)
+    kospi_popular = [
+        '005930',  # 삼성전자
+        '000660',  # SK하이닉스
+        '035420',  # NAVER
+        '051910',  # LG화학
+        '068270',  # 셀트리온
+        '207940',  # 삼성바이오로직스
+        '003550',  # LG
+        '017670',  # SK텔레콤
+        '028260',  # 삼성물산
+        '032830',  # 삼성생명
+        '034730',  # SK
+        '066570',  # LG전자
+        '105560',  # KB금융
+        '112040',  # 현대차
+        '323410',  # 카카오
+    ]
+    
+    # 미국 주식 인기 종목 (10개)
+    us_popular = [
+        'AAPL',    # Apple
+        'MSFT',    # Microsoft
+        'GOOGL',   # Alphabet
+        'AMZN',    # Amazon
+        'TSLA',    # Tesla
+        'META',    # Meta
+        'NVDA',    # NVIDIA
+        'JPM',     # JPMorgan Chase
+        'V',       # Visa
+        'JNJ'      # Johnson & Johnson
+    ]
     
     results = []
-    for symbol in popular_symbols:
+    
+    # KOSPI 인기 종목 추가
+    for symbol in kospi_popular:
         data = stock_service.get_stock_price(symbol)
         if data:
+            data['market'] = 'KOSPI'
+            results.append(data)
+    
+    # 미국 주식 인기 종목 추가
+    for symbol in us_popular:
+        data = stock_service.get_us_stock_price(symbol)
+        if data:
+            data['market'] = 'US'
             results.append(data)
     
     return jsonify(results)

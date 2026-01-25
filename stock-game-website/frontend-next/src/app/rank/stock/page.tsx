@@ -35,16 +35,16 @@ const StockRankPage = () => {
       let apiUrl = '';
       switch (marketFilter) {
         case 'popular':
-          apiUrl = 'http://localhost:3000/api/stocks/popular';
+          apiUrl = '/api/stocks/popular';
           break;
         case 'kospi':
-          apiUrl = 'http://localhost:3000/api/stocks/kospi/all';
+          apiUrl = '/api/stocks/kospi/all';
           break;
         case 'us':
-          apiUrl = 'http://localhost:3000/api/stocks/us';
+          apiUrl = '/api/stocks/us';
           break;
         default:
-          apiUrl = 'http://localhost:3000/api/stocks/popular';
+          apiUrl = '/api/stocks/popular';
       }
       
       const response = await fetch(apiUrl);
@@ -64,8 +64,8 @@ const StockRankPage = () => {
         change: stock.change,
         changePercent: stock.change_rate,
         volume: stock.volume || 0,
-        market: marketFilter === 'us' ? 'US' : 'KOSPI',
-        industry: stock.industry || (marketFilter === 'us' ? 'Technology' : 'Technology'),
+        market: stock.market || (marketFilter === 'us' ? 'US' : 'KOSPI'),
+        industry: stock.industry || (stock.market === 'US' ? 'Technology' : 'Technology'),
         lastUpdated: stock.timestamp,
       }));
 
