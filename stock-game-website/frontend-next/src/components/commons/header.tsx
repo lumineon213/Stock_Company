@@ -18,10 +18,25 @@ const dropdownMenus = [
         items: [
             { name: 'MY PORTFOLIO', href: '/myportfolio' },
             { name: 'GAME AREA', href: '/gamearea' },
-            { name: 'LEADERBOARD', href: '#' },
             { name: 'HISTORY', href: '/history' }
         ] 
     },
+    {
+        name: 'RANK',
+        items: [
+            { name: 'LIVE RANK', href: '/rank/live' },
+            { name: 'WEEKLY RANK', href: '/rank/weekly' },
+            { name: 'MONTHLY RANK', href: '/rank/monthly' },
+            { name: 'STOCK RANK', href: '/rank/stock' }
+        ]
+    },
+    {
+        name: 'NEWS',
+        items: [
+            { name: 'MARKET NEWS', href: '/news' },
+            { name: 'STOCK ANALYSIS', href: '/news/analysis' }
+        ]
+    }
 ];
 
 // --- Dropdown 컴포넌트 ---

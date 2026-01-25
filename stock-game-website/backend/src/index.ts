@@ -142,22 +142,115 @@ app.post('/api/auth/login', async (req: Request<{}, {}, LoginRequest>, res: ExRe
       return res.status(401).json({ message: '비밀번호가 틀렸습니다.' });
     }
   } catch (error) {
-    // 🚀 로그 추가: 에러 상세 출력
+    // 로그 추가: 에러 상세 출력
     console.error('[LOGIN ERROR]', error);
     return res.status(500).json({ message: '서버 오류가 발생했습니다.' });
   }
 });
 
-// 4. 가상 주식 데이터 (기존 유지)
-app.get('/api/stock/latest', (_req: Request, res: ExResponse) => {
-  const fakeStockData = {
-    symbol: 'MOCK_STK',
-    company: 'Express Server Mock Data',
-    price: (Math.random() * (1200 - 900) + 900).toFixed(2),
-    change: (Math.random() * (7 - (-3)) + (-3)).toFixed(2),
-    timestamp: new Date().toISOString(),
-  };
-  res.status(200).json(fakeStockData);
+// 4. 실시간 주식 데이터 (finance-datareader 연동)
+app.get('/api/stock/latest', async (_req: Request, res: ExResponse) => {
+  try {
+    const response = await fetch('http://localhost:5000/api/stock/latest');
+    const stockData = await response.json();
+    res.status(200).json(stockData);
+  } catch (error) {
+    console.error('[STOCK API ERROR]', error);
+    // fallback 데이터
+    const fakeStockData = {
+      symbol: 'MOCK_STK',
+      company: 'Express Server Mock Data',
+      price: (Math.random() * (1200 - 900) + 900).toFixed(2),
+      change: (Math.random() * (7 - (-3)) + (-3)).toFixed(2),
+      timestamp: new Date().toISOString(),
+    };
+    res.status(200).json(fakeStockData);
+  }
+});
+
+// 5. 특정 종목 주가 조회
+app.get('/api/stock/price/:symbol', async (req: Request, res: ExResponse) => {
+  const { symbol } = req.params;
+  const days = req.query.days ? parseInt(req.query.days as string) : 30;
+  
+  try {
+    const response = await fetch(`http://localhost:5000/api/stock/price/${symbol}?days=${days}`);
+    if (response.ok) {
+      const stockData = await response.json();
+      res.status(200).json(stockData);
+    } else {
+      res.status(404).json({ error: 'Stock data not found' });
+    }
+  } catch (error) {
+    console.error('[STOCK PRICE ERROR]', error);
+    res.status(500).json({ error: 'Failed to fetch stock price' });
+  }
+});
+
+// 6. 종목 검색
+app.get('/api/stock/search', async (req: Request, res: ExResponse) => {
+  const keyword = req.query.q as string;
+  
+  if (!keyword) {
+    return res.status(400).json({ error: 'Search keyword required' });
+  }
+  
+  try {
+    const response = await fetch(`http://localhost:5000/api/stock/search?q=${encodeURIComponent(keyword)}`);
+    const searchResults = await response.json();
+    res.status(200).json(searchResults);
+  } catch (error) {
+    console.error('[STOCK SEARCH ERROR]', error);
+    res.status(500).json({ error: 'Failed to search stocks' });
+  }
+});
+
+// 7. 인기 종목 데이터
+app.get('/api/stocks/popular', async (_req: Request, res: ExResponse) => {
+  try {
+    const response = await fetch('http://localhost:5000/api/stocks/popular');
+    const popularStocks = await response.json();
+    res.status(200).json(popularStocks);
+  } catch (error) {
+    console.error('[POPULAR STOCKS ERROR]', error);
+    res.status(500).json({ error: 'Failed to fetch popular stocks' });
+  }
+});
+
+// 8. KOSPI 지수
+app.get('/api/market/kospi', async (_req: Request, res: ExResponse) => {
+  try {
+    const response = await fetch('http://localhost:5000/api/market/kospi');
+    const kospiData = await response.json();
+    res.status(200).json(kospiData);
+  } catch (error) {
+    console.error('[KOSPI ERROR]', error);
+    res.status(500).json({ error: 'Failed to fetch KOSPI data' });
+  }
+});
+
+// 9. 미국 주식 데이터
+app.get('/api/stocks/us', async (_req: Request, res: ExResponse) => {
+  try {
+    const response = await fetch('http://localhost:5000/api/stocks/us');
+    const usStocks = await response.json();
+    res.status(200).json(usStocks);
+  } catch (error) {
+    console.error('[US STOCKS ERROR]', error);
+    res.status(500).json({ error: 'Failed to fetch US stocks' });
+  }
+});
+
+// 10. KOSPI 전체 종목 데이터
+app.get('/api/stocks/kospi/all', async (_req: Request, res: ExResponse) => {
+  try {
+    const response = await fetch('http://localhost:5000/api/stocks/kospi/all');
+    const kospiStocks = await response.json();
+    res.status(200).json(kospiStocks);
+  } catch (error) {
+    console.error('[KOSPI ALL ERROR]', error);
+    res.status(500).json({ error: 'Failed to fetch KOSPI stocks' });
+  }
 });
 
 // --- 서버 시작 ---
