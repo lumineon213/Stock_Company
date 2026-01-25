@@ -16,10 +16,10 @@ const dropdownMenus = [
     { 
         name: 'GAME', 
         items: [
-            { name: 'MY PORTFOLIO', href: '#' },
-            { name: 'GAME AREA', href: '/gamearea' }, // 파일명이 gamearea.tsx라면 경로는 /gamearea
+            { name: 'MY PORTFOLIO', href: '/myportfolio' },
+            { name: 'GAME AREA', href: '/gamearea' },
             { name: 'LEADERBOARD', href: '#' },
-            { name: 'REPLAY', href: '#' }
+            { name: 'HISTORY', href: '/history' }
         ] 
     },
 ];
@@ -98,14 +98,22 @@ interface SidebarProps {
 }
 
 const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
-    const menuLinks = [
-        { name: 'LOGIN', href: '/login' },
-        { name: 'MY PAGE', href: '/mypage' },
+    const { isLoggedIn, logout, user, isLoading } = useAuth();
+
+    const loggedInMenuLinks = [
+        { name: 'MY PORTFOLIO', href: '/myportfolio' },
+        { name: 'GAME AREA', href: '/gamearea' },
         { name: 'SETTINGS', href: '/settings' },
-        { name: 'FAVORITES', href: '/favorites' },
         { name: 'HISTORY', href: '/history' },
     ];
-    const { isLoggedIn, logout, user } = useAuth(); // 인증 상태 가져오기
+
+    const loggedOutMenuLinks = [
+        { name: 'LOGIN', href: '/login' },
+        { name: 'SIGN UP', href: '/signup' },
+    ];
+
+    const menuLinks = isLoggedIn ? loggedInMenuLinks : loggedOutMenuLinks;
+
     return (
         <>
             {/* 1. 배경 오버레이 (클릭 시 닫힘) */}
@@ -122,7 +130,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
                     isOpen ? 'translate-x-0' : 'translate-x-full'
                 }`}
             >
-                <div className="p-6 font-mono">
+                <div className="p-6 font-mono h-full flex flex-col">
                     <div className="flex justify-between items-center mb-8 pb-4 border-b border-cyan-900">
                         <h2 className="text-xl font-bold text-white tracking-widest">
                             SYSTEM <span className="text-cyan-400">MENU</span>
@@ -133,8 +141,34 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
                             </svg>
                         </button>
                     </div>
+
+                    {/* 유저 정보 표시 (로그인 시) */}
+                    {isLoggedIn && user && (
+                        <div className="mb-6 p-4 bg-gray-900/50 border border-cyan-900/50">
+                            <div className="flex items-center gap-3 mb-2">
+                                <div className="w-10 h-10 bg-cyan-900/50 flex items-center justify-center text-cyan-400 font-bold">
+                                    {user.nickname?.charAt(0).toUpperCase() || 'A'}
+                                </div>
+                                <div>
+                                    <p className="text-cyan-400 font-bold text-sm">{user.nickname || 'Agent'}</p>
+                                    <p className="text-gray-500 text-xs">{user.email}</p>
+                                </div>
+                            </div>
+                            <div className="text-right">
+                                <p className="text-xs text-gray-500">BALANCE</p>
+                                <p className="text-white font-bold">{user.balance?.toLocaleString() || '1,000,000'} 원</p>
+                            </div>
+                        </div>
+                    )}
+
+                    {/* 로딩 상태 */}
+                    {isLoading && (
+                        <div className="mb-6 p-4 text-center">
+                            <p className="text-gray-500 text-xs animate-pulse">LOADING...</p>
+                        </div>
+                    )}
                     
-                    <nav className="space-y-4">
+                    <nav className="space-y-4 flex-1">
                         {menuLinks.map((link) => (
                             <Link 
                                 href={link.href} 
@@ -146,6 +180,21 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
                             </Link>
                         ))}
                     </nav>
+
+                    {/* 로그아웃 버튼 (로그인 시) */}
+                    {isLoggedIn && (
+                        <div className="pt-4 border-t border-cyan-900/50">
+                            <button 
+                                onClick={() => {
+                                    logout();
+                                    onClose();
+                                }}
+                                className="w-full px-4 py-3 text-red-400 hover:text-red-300 hover:bg-red-950/30 border border-red-900/50 transition-all duration-200 uppercase tracking-wider text-sm font-bold"
+                            >
+                                DISCONNECT / LOGOUT
+                            </button>
+                        </div>
+                    )}
                 </div>
             </div>
         </>
@@ -167,10 +216,10 @@ const Header: React.FC = () => {
                         
                         {/* 1. 왼쪽 - 프로젝트명 (로고 디자인 변경) */}
                         <div className="flex-shrink-0">
-                            <a href="/" className="text-2xl font-black tracking-tighter text-white group flex items-center">
+                            <Link href="/" className="text-2xl font-black tracking-tighter text-white group flex items-center">
                                 <span className="text-cyan-400 mr-1 group-hover:animate-pulse">■</span>
                                 PROJECT <span className="text-cyan-400 drop-shadow-[0_0_5px_rgba(34,211,238,0.8)] ml-1">STOCK</span>
-                            </a>
+                            </Link>
                         </div>
 
                         {/* 2. 중앙 - 드롭다운 메뉴 */}

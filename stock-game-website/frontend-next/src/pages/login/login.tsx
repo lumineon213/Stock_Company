@@ -2,46 +2,29 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import Link from 'next/link';
-import supabase from '@/lib/supabaseClient';
+import { useAuth } from '@/context/AuthContext';
 
 const LoginPage = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
+  const { login } = useAuth();
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
     setErrorMessage('');
 
-    try {
-      const { data: authData, error: authError } = await supabase.auth.signInWithPassword({
-        email,
-        password,
-      });
-
-      if (authError) throw authError;
-      if (!authData.user) throw new Error('로그인 실패');
-
-      // 사용자 정보 가져오기 (선택)
-      const { data: userData, error: dbError } = await supabase
-        .from('users')
-        .select('nickname, balance')
-        .eq('user_id', authData.user.id)
-        .single();
-
-      if (dbError || !userData) {
-        console.warn('사용자 데이터 로드 실패', dbError);
-      }
-
-      alert(`로그인 성공!\n환영합니다, ${userData?.nickname || 'Agent'}님`);
-      window.location.href = '/'; // 메인 페이지로 이동
-    } catch (error: any) {
-      setErrorMessage(error.message || '로그인 중 오류가 발생했습니다.');
-    } finally {
-      setIsLoading(false);
+    const result = await login(email, password);
+    
+    if (result.success) {
+      window.location.href = '/';
+    } else {
+      setErrorMessage(result.error || '로그인에 실패했습니다.');
     }
+    
+    setIsLoading(false);
   };
 
   return (
@@ -90,11 +73,11 @@ const LoginPage = () => {
               <label className="text-xs text-cyan-300 uppercase tracking-wider block">Agent ID / Email</label>
               <div className="relative group">
                 <input 
-                  type="email"
+                  type="text"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   className="w-full bg-black/50 border border-gray-600 rounded-sm px-4 py-3 pl-10 text-cyan-100 focus:outline-none focus:border-cyan-400 focus:ring-1 focus:ring-cyan-400 transition-all placeholder-gray-600"
-                  placeholder="agent@stock.com"
+                  placeholder="admin or agent@stock.com"
                   required
                 />
                 <svg className="absolute left-3 top-3.5 h-5 w-5 text-gray-500 group-focus-within:text-cyan-400 transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor">

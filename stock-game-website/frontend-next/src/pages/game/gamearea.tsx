@@ -1,12 +1,13 @@
 "use client";
 
 import React, { useEffect, useRef } from 'react';
-import { createChart, ColorType, UTCTimestamp, IChartApi, ISeriesApi, CandlestickSeries } from 'lightweight-charts';
+import { createChart, ColorType, UTCTimestamp, IChartApi, CandlestickSeries } from 'lightweight-charts';
 
 export default function GameArea() {
     const chartContainerRef = useRef<HTMLDivElement>(null);
     const chartRef = useRef<IChartApi | null>(null); // 차트 객체 저장용
-    const candlestickSeriesRef = useRef<ISeriesApi<typeof CandlestickSeries> | null>(null);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const candlestickSeriesRef = useRef<any>(null);
 
     useEffect(() => {
         if (!chartContainerRef.current) return;

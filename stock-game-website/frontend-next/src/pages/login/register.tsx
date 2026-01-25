@@ -49,8 +49,9 @@ const RegisterPage = () => {
 
       alert('회원가입 성공!\n이메일 확인 후 로그인해주세요.');
       window.location.href = '/login';
-    } catch (error: any) {
-      setErrorMessage(error.message || '회원가입 중 오류가 발생했습니다.');
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : '회원가입 중 오류가 발생했습니다.';
+      setErrorMessage(errorMessage);
     } finally {
       setIsLoading(false);
     }

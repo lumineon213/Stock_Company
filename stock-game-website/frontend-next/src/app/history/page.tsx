@@ -1,11 +1,11 @@
 "use client";
-import GameArea from '@/pages/game/gamearea';
+import History from '@/pages/history/history';
 import ProtectedRoute from '@/components/commons/ProtectedRoute';
 
 export default function Page() {
   return (
     <ProtectedRoute>
-      <GameArea />
+      <History />
     </ProtectedRoute>
   );
 }

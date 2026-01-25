@@ -6,13 +6,11 @@
 
 generator client {
   provider = "prisma-client-js"
-  output = "../node_modules/.prisma/client"
-  engineType      = "library"
 }
 
 datasource db {
-  provider = "sqlite"
-  // URL is now configured in prisma.config.ts
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
 }
 
 model User {
