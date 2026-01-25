@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { createChart, ColorType, UTCTimestamp, IChartApi, CandlestickSeries } from 'lightweight-charts';
 
 export default function GameArea() {
@@ -8,6 +8,37 @@ export default function GameArea() {
     const chartRef = useRef<IChartApi | null>(null); // 차트 객체 저장용
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const candlestickSeriesRef = useRef<any>(null);
+
+    // 매수/매도 상태
+    const [showBuyModal, setShowBuyModal] = useState(false);
+    const [showSellModal, setShowSellModal] = useState(false);
+    const [buyQuantity, setBuyQuantity] = useState('');
+    const [sellQuantity, setSellQuantity] = useState('');
+    const [currentPrice] = useState(152100); // 현재가 (예시: 삼성전자)
+
+    // 매수/매도 핸들러
+    const handleBuyClick = () => setShowBuyModal(true);
+    const handleSellClick = () => setShowSellModal(true);
+
+    const executeBuy = () => {
+        const quantity = parseInt(buyQuantity);
+        if (quantity && quantity > 0) {
+            const totalCost = quantity * currentPrice;
+            alert(`매수: ${quantity}주\n총 금액: ${totalCost.toLocaleString()}원`);
+            setBuyQuantity('');
+            setShowBuyModal(false);
+        }
+    };
+
+    const executeSell = () => {
+        const quantity = parseInt(sellQuantity);
+        if (quantity && quantity > 0) {
+            const totalRevenue = quantity * currentPrice;
+            alert(`매도: ${quantity}주\n총 금액: ${totalRevenue.toLocaleString()}원`);
+            setSellQuantity('');
+            setShowSellModal(false);
+        }
+    };
 
     useEffect(() => {
         if (!chartContainerRef.current) return;
@@ -93,8 +124,18 @@ export default function GameArea() {
                 </div>
 
                 <div className="grid grid-cols-2 gap-2 mb-8">
-                    <button className="bg-red-600 hover:bg-red-500 text-white py-3 font-bold rounded-sm text-sm">매수 (A)</button>
-                    <button className="bg-blue-600 hover:bg-blue-500 text-white py-3 font-bold rounded-sm text-sm">매도 (S)</button>
+                    <button 
+                        onClick={handleBuyClick}
+                        className="bg-red-600 hover:bg-red-500 text-white py-3 font-bold rounded-sm text-sm transition-colors"
+                    >
+                        매수 (A)
+                    </button>
+                    <button 
+                        onClick={handleSellClick}
+                        className="bg-blue-600 hover:bg-blue-500 text-white py-3 font-bold rounded-sm text-sm transition-colors"
+                    >
+                        매도 (S)
+                    </button>
                 </div>
 
                 <div className="bg-zinc-900/50 border border-zinc-800 p-4 rounded-sm mb-6">
@@ -119,6 +160,126 @@ export default function GameArea() {
                     </div>
                 </div>
             </div>
+            
+            {/* 매수 모달 */}
+            {showBuyModal && (
+                <div className="fixed inset-0 bg-black/80 z-50 flex items-center justify-center">
+                    <div className="bg-gray-900 border border-cyan-900/50 p-6 w-full max-w-sm">
+                        <div className="flex justify-between items-center mb-4">
+                            <h3 className="text-lg font-bold text-red-500">매수</h3>
+                            <button onClick={() => setShowBuyModal(false)} className="text-gray-500 hover:text-white">✕</button>
+                        </div>
+                        
+                        <div className="space-y-4">
+                            <div className="bg-gray-800 p-3 rounded">
+                                <div className="flex justify-between items-center">
+                                    <span className="text-gray-400 text-sm">현재가</span>
+                                    <span className="font-bold text-white">{currentPrice.toLocaleString()}원</span>
+                                </div>
+                            </div>
+                            
+                            <div>
+                                <label className="text-xs text-gray-400 block mb-1">수량</label>
+                                <input 
+                                    type="number" 
+                                    value={buyQuantity} 
+                                    onChange={(e) => setBuyQuantity(e.target.value)}
+                                    className="w-full bg-black border border-gray-700 p-2 text-white"
+                                    placeholder="수량 입력"
+                                    min="1"
+                                />
+                            </div>
+                            
+                            {buyQuantity && (
+                                <div className="bg-gray-800 p-3 rounded">
+                                    <div className="flex justify-between items-center">
+                                        <span className="text-gray-400 text-sm">총 금액</span>
+                                        <span className="font-bold text-red-500">
+                                            {(parseInt(buyQuantity) * currentPrice).toLocaleString()}원
+                                        </span>
+                                    </div>
+                                </div>
+                            )}
+                            
+                            <div className="grid grid-cols-2 gap-2">
+                                <button 
+                                    onClick={() => setShowBuyModal(false)}
+                                    className="bg-gray-700 hover:bg-gray-600 text-white py-2 rounded"
+                                >
+                                    취소
+                                </button>
+                                <button 
+                                    onClick={executeBuy}
+                                    disabled={!buyQuantity || parseInt(buyQuantity) <= 0}
+                                    className="bg-red-600 hover:bg-red-500 disabled:bg-gray-700 disabled:text-gray-500 text-white py-2 rounded font-bold transition-colors"
+                                >
+                                    매수
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
+            
+            {/* 매도 모달 */}
+            {showSellModal && (
+                <div className="fixed inset-0 bg-black/80 z-50 flex items-center justify-center">
+                    <div className="bg-gray-900 border border-cyan-900/50 p-6 w-full max-w-sm">
+                        <div className="flex justify-between items-center mb-4">
+                            <h3 className="text-lg font-bold text-blue-500">매도</h3>
+                            <button onClick={() => setShowSellModal(false)} className="text-gray-500 hover:text-white">✕</button>
+                        </div>
+                        
+                        <div className="space-y-4">
+                            <div className="bg-gray-800 p-3 rounded">
+                                <div className="flex justify-between items-center">
+                                    <span className="text-gray-400 text-sm">현재가</span>
+                                    <span className="font-bold text-white">{currentPrice.toLocaleString()}원</span>
+                                </div>
+                            </div>
+                            
+                            <div>
+                                <label className="text-xs text-gray-400 block mb-1">수량</label>
+                                <input 
+                                    type="number" 
+                                    value={sellQuantity} 
+                                    onChange={(e) => setSellQuantity(e.target.value)}
+                                    className="w-full bg-black border border-gray-700 p-2 text-white"
+                                    placeholder="수량 입력"
+                                    min="1"
+                                />
+                            </div>
+                            
+                            {sellQuantity && (
+                                <div className="bg-gray-800 p-3 rounded">
+                                    <div className="flex justify-between items-center">
+                                        <span className="text-gray-400 text-sm">총 금액</span>
+                                        <span className="font-bold text-blue-500">
+                                            {(parseInt(sellQuantity) * currentPrice).toLocaleString()}원
+                                        </span>
+                                    </div>
+                                </div>
+                            )}
+                            
+                            <div className="grid grid-cols-2 gap-2">
+                                <button 
+                                    onClick={() => setShowSellModal(false)}
+                                    className="bg-gray-700 hover:bg-gray-600 text-white py-2 rounded"
+                                >
+                                    취소
+                                </button>
+                                <button 
+                                    onClick={executeSell}
+                                    disabled={!sellQuantity || parseInt(sellQuantity) <= 0}
+                                    className="bg-blue-600 hover:bg-blue-500 disabled:bg-gray-700 disabled:text-gray-500 text-white py-2 rounded font-bold transition-colors"
+                                >
+                                    매도
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 }

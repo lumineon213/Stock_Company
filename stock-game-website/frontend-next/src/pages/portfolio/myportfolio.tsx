@@ -130,13 +130,123 @@ export default function MyPortfolio() {
   // 폼 상태
   const [newWatchlist, setNewWatchlist] = useState({ symbol: '', name: '', currentPrice: '' });
   const [newHolding, setNewHolding] = useState({ symbol: '', name: '', quantity: '', avgPrice: '', currentPrice: '', broker: '키움증권' });
+  
+  // 검색 상태
+  const [searchQuery, setSearchQuery] = useState('');
+  const [searchResults, setSearchResults] = useState([]);
+  const [isSearching, setIsSearching] = useState(false);
+  const [showSearchResults, setShowSearchResults] = useState(false);
+  
+  // 보유종목 검색 상태
+  const [holdingSearchQuery, setHoldingSearchQuery] = useState('');
+  const [holdingSearchResults, setHoldingSearchResults] = useState([]);
+  const [isHoldingSearching, setIsHoldingSearching] = useState(false);
+  const [showHoldingSearchResults, setShowHoldingSearchResults] = useState(false);
 
   // ID 생성 함수
   const generateId = () => Math.random().toString(36).substring(2, 9);
 
+  // 종목 검색
+  const searchStocks = async (query: string) => {
+    if (!query.trim()) {
+      setSearchResults([]);
+      setShowSearchResults(false);
+      return;
+    }
+    
+    setIsSearching(true);
+    try {
+      const response = await fetch(`/api/stocks/search?q=${encodeURIComponent(query)}`);
+      if (response.ok) {
+        const results = await response.json();
+        setSearchResults(results);
+        setShowSearchResults(true);
+      }
+    } catch (error) {
+      console.error('Error searching stocks:', error);
+      setSearchResults([]);
+    } finally {
+      setIsSearching(false);
+    }
+  };
+
+  // 종목 정보 가져오기
+  const fetchStockInfo = async (symbol: string) => {
+    try {
+      const response = await fetch(`/api/stocks/price/${symbol}`);
+      if (response.ok) {
+        const stockData = await response.json();
+        return stockData;
+      }
+    } catch (error) {
+      console.error('Error fetching stock info:', error);
+    }
+    return null;
+  };
+
+  // 검색 결과에서 종목 선택
+  const selectSearchResult = (stock: any) => {
+    setNewWatchlist({
+      symbol: stock.symbol,
+      name: stock.name,
+      currentPrice: stock.price?.toString() || '',
+    });
+    setSearchQuery('');
+    setSearchResults([]);
+    setShowSearchResults(false);
+  };
+
+  // 보유종목 검색
+  const searchHoldingStocks = async (query: string) => {
+    if (!query.trim()) {
+      setHoldingSearchResults([]);
+      setShowHoldingSearchResults(false);
+      return;
+    }
+    
+    setIsHoldingSearching(true);
+    try {
+      const response = await fetch(`/api/stocks/search?q=${encodeURIComponent(query)}`);
+      if (response.ok) {
+        const results = await response.json();
+        setHoldingSearchResults(results);
+        setShowHoldingSearchResults(true);
+      }
+    } catch (error) {
+      console.error('Error searching holding stocks:', error);
+      setHoldingSearchResults([]);
+    } finally {
+      setIsHoldingSearching(false);
+    }
+  };
+
+  // 보유종목 검색 결과에서 종목 선택
+  const selectHoldingSearchResult = (stock: any) => {
+    setNewHolding({
+      ...newHolding,
+      symbol: stock.symbol,
+      name: stock.name,
+      currentPrice: stock.price?.toString() || '',
+    });
+    setHoldingSearchQuery('');
+    setHoldingSearchResults([]);
+    setShowHoldingSearchResults(false);
+  };
+
   // 관심종목 추가
   const addWatchlist = () => {
     if (!newWatchlist.symbol || !newWatchlist.name) return;
+    
+    // 중복 체크
+    const isDuplicate = watchlist.some(stock => 
+      stock.symbol.toLowerCase() === newWatchlist.symbol.toLowerCase()
+    );
+    
+    if (isDuplicate) {
+      alert('이미 추가된 종목입니다.');
+      return;
+    }
+    
     const stock: WatchlistStock = {
       id: generateId(),
       symbol: newWatchlist.symbol.toUpperCase(),
@@ -145,8 +255,21 @@ export default function MyPortfolio() {
       change: 0,
       changePercent: 0,
     };
-    setWatchlist(prev => [...prev, stock]);
+    
+    console.log('Adding stock:', stock);
+    console.log('Current watchlist:', watchlist);
+    
+    setWatchlist(prev => {
+      const newWatchlist = [...prev, stock];
+      console.log('New watchlist:', newWatchlist);
+      return newWatchlist;
+    });
+    
+    // 폼 초기화
     setNewWatchlist({ symbol: '', name: '', currentPrice: '' });
+    setSearchQuery('');
+    setSearchResults([]);
+    setShowSearchResults(false);
     setShowWatchlistModal(false);
   };
 
@@ -182,6 +305,9 @@ export default function MyPortfolio() {
     setNewHolding({ symbol: '', name: '', quantity: '', avgPrice: '', currentPrice: '', broker: '키움증권' });
     setEditingHolding(null);
     setShowHoldingModal(false);
+    setHoldingSearchQuery('');
+    setHoldingSearchResults([]);
+    setShowHoldingSearchResults(false);
   };
 
   const editHolding = (stock: HoldingStock) => {
@@ -265,28 +391,33 @@ export default function MyPortfolio() {
               <motion.div className="grid gap-4" variants={containerVariants} initial="hidden" animate="visible">
                 {watchlist.length === 0 ? (
                   <div className="text-center py-16 text-gray-600">관심 종목이 없습니다</div>
-                ) : watchlist.map((stock) => (
-                  <motion.div key={stock.id} variants={itemVariants} className="bg-gray-900/50 border border-gray-800 p-4 hover:border-cyan-900/50 group">
-                    <div className="flex justify-between items-center">
-                      <div className="flex items-center space-x-4">
-                        <div className="w-10 h-10 bg-gray-800 flex items-center justify-center text-cyan-400 font-bold text-xs">{stock.symbol.slice(0, 2)}</div>
-                        <div>
-                          <p className="font-bold">{stock.name}</p>
-                          <p className="text-xs text-gray-500">{stock.symbol}</p>
+                ) : (
+                  <>
+                    {console.log('Rendering watchlist:', watchlist)}
+                    {watchlist.map((stock, index) => (
+                      <motion.div key={`${stock.id}-${index}`} variants={itemVariants} className="bg-gray-900/50 border border-gray-800 p-4 hover:border-cyan-900/50 group">
+                        <div className="flex justify-between items-center">
+                          <div className="flex items-center space-x-4">
+                            <div className="w-10 h-10 bg-gray-800 flex items-center justify-center text-cyan-400 font-bold text-xs">{stock.symbol.slice(0, 2)}</div>
+                            <div>
+                              <p className="font-bold">{stock.name}</p>
+                              <p className="text-xs text-gray-500">{stock.symbol}</p>
+                            </div>
+                          </div>
+                          <div className="flex items-center space-x-6">
+                            <div className="text-right">
+                              <p className="font-bold">{stock.currentPrice.toLocaleString()}<span className="text-xs text-gray-500 ml-1">원</span></p>
+                              <p className={`text-sm ${stock.change >= 0 ? 'text-red-500' : 'text-blue-500'}`}>
+                                {stock.change >= 0 ? '+' : ''}{stock.change.toLocaleString()} ({stock.changePercent.toFixed(2)}%)
+                              </p>
+                            </div>
+                            <button onClick={() => removeWatchlist(stock.id)} className="opacity-0 group-hover:opacity-100 text-gray-600 hover:text-red-500">✕</button>
+                          </div>
                         </div>
-                      </div>
-                      <div className="flex items-center space-x-6">
-                        <div className="text-right">
-                          <p className="font-bold">{stock.currentPrice.toLocaleString()}<span className="text-xs text-gray-500 ml-1">원</span></p>
-                          <p className={`text-sm ${stock.change >= 0 ? 'text-red-500' : 'text-blue-500'}`}>
-                            {stock.change >= 0 ? '+' : ''}{stock.change.toLocaleString()} ({stock.changePercent.toFixed(2)}%)
-                          </p>
-                        </div>
-                        <button onClick={() => removeWatchlist(stock.id)} className="opacity-0 group-hover:opacity-100 text-gray-600 hover:text-red-500">✕</button>
-                      </div>
-                    </div>
-                  </motion.div>
-                ))}
+                      </motion.div>
+                    ))}
+                  </>
+                )}
               </motion.div>
             </div>
           )}
@@ -382,42 +513,153 @@ export default function MyPortfolio() {
       </div>
 
       {/* 관심종목 추가 모달 */}
-      <Modal isOpen={showWatchlistModal} onClose={() => setShowWatchlistModal(false)} title="관심 종목 추가">
+      <Modal isOpen={showWatchlistModal} onClose={() => { setShowWatchlistModal(false); setSearchQuery(''); setSearchResults([]); setShowSearchResults(false); }} title="관심 종목 추가">
         <div className="space-y-4">
-          <div>
-            <label className="text-xs text-gray-400 block mb-1">종목 코드</label>
-            <input value={newWatchlist.symbol} onChange={e => setNewWatchlist({ ...newWatchlist, symbol: e.target.value })}
-              className="w-full bg-black border border-gray-700 p-2 text-white" placeholder="AAPL, 005930" />
+          <div className="relative">
+            <label className="text-xs text-gray-400 block mb-1">종목 검색</label>
+            <input 
+              value={searchQuery} 
+              onChange={e => {
+                setSearchQuery(e.target.value);
+                searchStocks(e.target.value);
+              }}
+              className="w-full bg-black border border-gray-700 p-2 text-white pr-10" 
+              placeholder="종목명 또는 종목 코드 입력 (예: 삼성전자, 005930, Apple)" 
+            />
+            {isSearching && (
+              <div className="absolute right-2 top-2 text-gray-500">
+                <div className="animate-spin w-4 h-4 border-2 border-gray-600 border-t-cyan-400 rounded-full"></div>
+              </div>
+            )}
           </div>
-          <div>
-            <label className="text-xs text-gray-400 block mb-1">종목명</label>
-            <input value={newWatchlist.name} onChange={e => setNewWatchlist({ ...newWatchlist, name: e.target.value })}
-              className="w-full bg-black border border-gray-700 p-2 text-white" placeholder="Apple Inc." />
-          </div>
-          <div>
-            <label className="text-xs text-gray-400 block mb-1">현재가</label>
-            <input type="number" value={newWatchlist.currentPrice} onChange={e => setNewWatchlist({ ...newWatchlist, currentPrice: e.target.value })}
-              className="w-full bg-black border border-gray-700 p-2 text-white" placeholder="178.50" />
-          </div>
-          <button onClick={addWatchlist} className="w-full bg-cyan-600 hover:bg-cyan-500 text-black font-bold py-2">추가</button>
+          
+          {/* 검색 결과 */}
+          {showSearchResults && (
+            <div className="max-h-40 overflow-y-auto border border-gray-700 rounded">
+              {searchResults.length === 0 ? (
+                <div className="p-4 text-center text-gray-500">검색 결과가 없습니다</div>
+              ) : (
+                searchResults.map((stock: any, index: number) => (
+                  <div 
+                    key={index}
+                    onClick={() => selectSearchResult(stock)}
+                    className="p-3 hover:bg-gray-800 cursor-pointer border-b border-gray-800 last:border-b-0"
+                  >
+                    <div className="flex justify-between items-center">
+                      <div>
+                        <p className="font-semibold text-cyan-400">{stock.name}</p>
+                        <p className="text-xs text-gray-500">{stock.symbol}</p>
+                      </div>
+                      {stock.price && (
+                        <div className="text-right">
+                          <p className="font-bold">{stock.price.toLocaleString()}</p>
+                          <p className="text-xs text-gray-500">원</p>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                ))
+              )}
+            </div>
+          )}
+          
+          {/* 선택된 종목 정보 */}
+          {newWatchlist.symbol && (
+            <div className="bg-gray-800 p-3 rounded">
+              <div className="flex justify-between items-center">
+                <div>
+                  <p className="font-semibold text-cyan-400">{newWatchlist.name}</p>
+                  <p className="text-xs text-gray-500">{newWatchlist.symbol}</p>
+                </div>
+                {newWatchlist.currentPrice && (
+                  <div className="text-right">
+                    <p className="font-bold">{parseFloat(newWatchlist.currentPrice).toLocaleString()}</p>
+                    <p className="text-xs text-gray-500">원</p>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+          
+          <button 
+            onClick={addWatchlist} 
+            disabled={!newWatchlist.symbol || !newWatchlist.name}
+            className="w-full bg-cyan-600 hover:bg-cyan-500 disabled:bg-gray-700 disabled:text-gray-500 text-black font-bold py-2 transition-colors"
+          >
+            추가
+          </button>
         </div>
       </Modal>
 
       {/* 보유종목 추가/편집 모달 */}
       <Modal isOpen={showHoldingModal} onClose={resetHoldingForm} title={editingHolding ? "보유 종목 편집" : "보유 종목 추가"}>
         <div className="space-y-4">
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label className="text-xs text-gray-400 block mb-1">종목 코드</label>
-              <input value={newHolding.symbol} onChange={e => setNewHolding({ ...newHolding, symbol: e.target.value })}
-                className="w-full bg-black border border-gray-700 p-2 text-white" placeholder="AAPL" />
-            </div>
-            <div>
-              <label className="text-xs text-gray-400 block mb-1">종목명</label>
-              <input value={newHolding.name} onChange={e => setNewHolding({ ...newHolding, name: e.target.value })}
-                className="w-full bg-black border border-gray-700 p-2 text-white" placeholder="Apple Inc." />
-            </div>
+          <div className="relative">
+            <label className="text-xs text-gray-400 block mb-1">종목 검색</label>
+            <input 
+              value={holdingSearchQuery} 
+              onChange={e => {
+                setHoldingSearchQuery(e.target.value);
+                searchHoldingStocks(e.target.value);
+              }}
+              className="w-full bg-black border border-gray-700 p-2 text-white pr-10" 
+              placeholder="종목명 또는 종목 코드 입력 (예: 삼성전자, 005930, Apple)" 
+            />
+            {isHoldingSearching && (
+              <div className="absolute right-2 top-2 text-gray-500">
+                <div className="animate-spin w-4 h-4 border-2 border-gray-600 border-t-cyan-400 rounded-full"></div>
+              </div>
+            )}
           </div>
+          
+          {/* 보유종목 검색 결과 */}
+          {showHoldingSearchResults && (
+            <div className="max-h-40 overflow-y-auto border border-gray-700 rounded">
+              {holdingSearchResults.length === 0 ? (
+                <div className="p-4 text-center text-gray-500">검색 결과가 없습니다</div>
+              ) : (
+                holdingSearchResults.map((stock: any, index: number) => (
+                  <div 
+                    key={index}
+                    onClick={() => selectHoldingSearchResult(stock)}
+                    className="p-3 hover:bg-gray-800 cursor-pointer border-b border-gray-800 last:border-b-0"
+                  >
+                    <div className="flex justify-between items-center">
+                      <div>
+                        <p className="font-semibold text-cyan-400">{stock.name}</p>
+                        <p className="text-xs text-gray-500">{stock.symbol}</p>
+                      </div>
+                      {stock.price && (
+                        <div className="text-right">
+                          <p className="font-bold">{stock.price.toLocaleString()}</p>
+                          <p className="text-xs text-gray-500">원</p>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                ))
+              )}
+            </div>
+          )}
+          
+          {/* 선택된 종목 정보 */}
+          {newHolding.symbol && (
+            <div className="bg-gray-800 p-3 rounded">
+              <div className="flex justify-between items-center">
+                <div>
+                  <p className="font-semibold text-cyan-400">{newHolding.name}</p>
+                  <p className="text-xs text-gray-500">{newHolding.symbol}</p>
+                </div>
+                {newHolding.currentPrice && (
+                  <div className="text-right">
+                    <p className="font-bold">{parseFloat(newHolding.currentPrice).toLocaleString()}</p>
+                    <p className="text-xs text-gray-500">원</p>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+          
           <div className="grid grid-cols-3 gap-4">
             <div>
               <label className="text-xs text-gray-400 block mb-1">수량</label>
